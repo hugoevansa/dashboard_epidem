@@ -86,7 +86,7 @@ with st.container(border=True):
             values='Values',
             names="Jenis Kelamin",
             color='Jenis Kelamin',
-            color_discrete_map={'Laki': "#62aec5", 'Perempuan': "#e64072"},
+            color_discrete_map={'Laki': "#FFE066", 'Perempuan': "#FFA500"},
             hole=0.4
         )
         st.plotly_chart(pie1, use_container_width=True)

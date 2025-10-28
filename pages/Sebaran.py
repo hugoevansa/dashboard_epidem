@@ -191,7 +191,7 @@ if row_index != 'None':
         st.divider()
         col1, col2, col3= st.columns([1, 1, 1])
         with col1:
-            st.write("#### Total")
+            st.write("#### Total Kasus")
             st.write(f'#### {format_jumlah(sub_df['total_kasus'].values[0])}')
             st.write("#### Laki-Laki")
             st.write(f'#### {format_jumlah(sub_df['Jumlah Kasus Terkena DBD Laki Laki'].values[0])}')
@@ -199,7 +199,7 @@ if row_index != 'None':
             st.write(f'#### {format_jumlah(sub_df['Jumlah Kasus Terkena DBD Perempuan'].values[0])}')
 
         with col2:
-            st.write("#### Total")
+            st.write("#### Total Kematian")
             st.write(f'#### {format_jumlah(sub_df['total_kematian'].values[0])}')
             st.write("#### Laki-Laki")
             st.write(f'#### {format_jumlah(sub_df['Jumlah Kematian Karena DBD Laki Laki'].values[0])}')
