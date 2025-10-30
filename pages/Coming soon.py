@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import geopandas as gpd
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 st.set_page_config(layout="wide")
 
@@ -78,7 +79,7 @@ or_min = df.loc[df["Prevalensi OR (Laki-laki vs Perempuan)"].idxmin()]
 # =====================
 st.markdown(f"""
 <h2 style="text-align:center; font-weight:800; margin-top:10px; margin-bottom:25px;">
-Ukuran Statistik Epidemiologi Penyakit DBD Jawa Barat Tahun 2024
+Ukuran Statistik Epidemiologi DBD Jawa Barat Tahun 2024
 </h2>
 
 <style>
@@ -96,10 +97,9 @@ Ukuran Statistik Epidemiologi Penyakit DBD Jawa Barat Tahun 2024
 
 /* ===== BOX ===== */
 .metric-box {{
-  border-radius: 16px;
-  # background-color: #ffffff;
+  border-radius: 9px;
   background-color: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.10);
   padding: 18px 20px;
   display: flex;
   flex-direction: column;
@@ -109,24 +109,24 @@ Ukuran Statistik Epidemiologi Penyakit DBD Jawa Barat Tahun 2024
 }}
 .metric-box:hover {{
   transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
 }}
 
 /* ===== TEKS ===== */
 .metric-title {{
   font-size: 17px;
   font-weight: 700;
-  color: #FF4500;
+  color: #FF0000;
   margin-bottom: 6px;
 }}
 .metric-value {{
   font-size: 34px;
-  font-weight: 900;
+  font-weight: 1000;
   color: #FF0000;
   margin-bottom: 4px;
 }}
 .metric-sub {{
-  color: #FF4500;
+  color: #FF0000;
   font-size: 14px;
 }}
 
@@ -143,18 +143,38 @@ Ukuran Statistik Epidemiologi Penyakit DBD Jawa Barat Tahun 2024
 .subtitle {{
   font-size: 12px;
   font-weight: 700;
-  color: #FF4500;
+  color: #FF0000;
   margin-bottom: 2px;
 }}
 .subname {{
   font-size: 12px;
-  font-weight: 600;
-  color: #FF4500;
+  font-weight: 400;
+  color: #FF0000;
 }}
 .subvalue {{
   font-size: 13px;
   font-weight: 700;
-  color: #FF4500;
+  color: #FF0000;
+}}
+
+/* ===== DARK MODE OVERRIDE ===== */
+@media (prefers-color-scheme: dark) {{
+  .metric-box {{
+    background-color: #ffffff !important;
+    border: 1px solid rgba(0,0,0,0.15) !important;
+    box-shadow: 0 6px 18px rgba(255,255,255,0.15) !important;
+  }}
+  .metric-title,
+  .metric-value,
+  .metric-sub,
+  .subtitle,
+  .subname,
+  .subvalue {{
+    color: #FF4500 !important;
+  }}
+  .metric-value {{
+    color: #FF0000 !important;
+  }}
 }}
 
 /* ===== RESPONSIVE ===== */
@@ -175,12 +195,6 @@ Ukuran Statistik Epidemiologi Penyakit DBD Jawa Barat Tahun 2024
 
 <!-- ===== KONTEN KOTAK ===== -->
 <div class="metric-grid">
-
-  <div class="metric-box">
-    <div class="metric-title">Total Kasus DBD</div>
-    <div class="metric-value">{total_kasus:,.0f}</div>
-    <div class="metric-sub">Jumlah seluruh kasus di Jawa Barat</div>
-  </div>
 
   <div class="metric-box">
     <div class="metric-title">Prevalensi DBD per 100.000 Penduduk</div>
@@ -236,6 +250,7 @@ Ukuran Statistik Epidemiologi Penyakit DBD Jawa Barat Tahun 2024
 </div>
 """, unsafe_allow_html=True)
 
+
 final_df = df[["KABUPATEN/KOTA", "Prevalensi DBD per 100.000", "CFR DBD (%)", "Prevalensi OR (Laki-laki vs Perempuan)"]]
 
 # ==== MAP
@@ -254,34 +269,54 @@ list_info = ['Angka prevalensi DBD per 100.000 di setiap kota/kab dalam peta ini
 'Angka dalam persen di CFR DBD di setiap kota/kab dalam peta ini mengartikan bahwa tinggi atau rendahnya resiko kematian karena dbd di kota/kab tersebut ditandai dengan tinggi atau rendahnya persentase CFR kota/kab tersebut. Semakin tinggi persenan CFR maka semakin tinggi resiko kematiannya.',
 'Angka Prevalensi Odds Ratio di setiap kota/kab dalam peta ini menandakan bahwa laki - laki kemungkinan terkena DBD di kota/kab tersebut lebih tinggi atau lebih rendah dibandingkan perempuan. Angka ini tidak bisa digunakan untuk perbandingan antar kota/kab']
 
+
 # col1, col2, col3 = st.columns([1, 1, 1])
 for i, c in enumerate(st.columns([1, 1, 1])):
-  with c:
-    sub_data = d.drop(columns='KABUPATEN/KOTA').iloc[:, i]
-    col = d.drop(columns='KABUPATEN/KOTA').columns[i]
+    with c:
+        col = d.drop(columns='KABUPATEN/KOTA').columns[i]
+        
+        # Data untuk Plotly
+        data_plot = merged.copy()
+        data_plot["KABUPATEN/KOTA"] = data_plot["KABUPATEN/KOTA"].astype(str)
 
-    fig, ax = plt.subplots(figsize=(20, 4))
+        merged_geojson = data_plot.__geo_interface__
 
-    with st.container(border=True):
-        st.write(col)
-        merged.plot(
-            ax=ax,
-            cmap='YlOrRd',
-            legend=True,
-            column=col,
-            edgecolor='black'
-        )
-        ax.axis('off')
-        st.pyplot(fig)
-      
+        # Judul
+        st.markdown(f"<h6 style='text-align:center; font-weight:bold;'>{col}</h6>", unsafe_allow_html=True)
+
+        # Plot peta
+        with st.container(border = True):
+          fig_map3 = px.choropleth(
+              data_frame=data_plot,
+              geojson=merged_geojson,
+              locations="KABUPATEN/KOTA",
+              featureidkey="properties.NAME_2",
+              color=col,
+              hover_name="KABUPATEN/KOTA",
+              color_continuous_scale="YlOrRd",
+              range_color=(data_plot[col].min(), data_plot[col].max()),
+          )
+          fig_map3.update_geos(fitbounds="locations", visible=False)
+          fig_map3.update_layout(
+              margin=dict(l=0, r=0, t=0, b=0),
+              coloraxis_colorbar=dict(title="", thickness=10, len=0.6),
+              showlegend=True
+          )
+
+          st.plotly_chart(fig_map3, use_container_width=True, config={
+              'scrollZoom': False,
+              'displayModeBar': True
+          })
+
         with st.expander('Show Info'):
-          st.write(list_info[i])
+            st.write(list_info[i])
+
 
 
 # ==============================
 # TABEL COMPACT
 # ==============================
-st.markdown("<br><h5 style='text-align:center;'>Rekap Statistik per Kabupaten/Kota</h5>", unsafe_allow_html=True)
+st.markdown("<br><h5 style='text-align:center;'> Ukuran Statistik per Kabupaten/Kota</h5>", unsafe_allow_html=True)
 st.dataframe(final_df.style.format({
     "Prevalensi DBD per 100.000": "{:.2f}",
     "CFR DBD (%)": "{:.2f}",
@@ -302,17 +337,17 @@ if row_index != 'None':
         col1, col2, col3 = st.columns([1, 1, 1])
         with col1:
           with st.container(border=True):
-            st.write("##### Prevalensi DBD per 100.000")
-            st.write(f'#### {format_jumlah(sub_df['Prevalensi DBD per 100.000'].values[0])}')
+            st.write("###### Prevalensi DBD per 100.000")
+            st.write(f'## {format_jumlah(sub_df['Prevalensi DBD per 100.000'].values[0])}')
             # st.metric("Jumlah Penduduk Laki-Laki", format_jumlah(sub_df['Prevalensi DBD per 100.000'].values[0]))
 
         with col2:
           with st.container(border=True):
-            st.write("##### CFR DBD (%)")
-            st.write(f'#### {format_jumlah(sub_df['CFR DBD (%)'].values[0])}')
+            st.write("###### CFR DBD (%)")
+            st.write(f'## {format_jumlah(sub_df['CFR DBD (%)'].values[0])}')
             # st.metric("Jumlah Kasus Laki-Laki", format_jumlah(sub_df['Jumlah Kasus Terkena DBD Laki Laki'].values[0]))
 
         with col3:
           with st.container(border=True):
-            st.write("##### Prevalensi OR (Laki-laki vs Perempuan)")
-            st.write(f'#### {format_jumlah(sub_df['Prevalensi OR (Laki-laki vs Perempuan)'].values[0])}')
+            st.write("###### Prevalensi OR (Laki-laki vs Perempuan)")
+            st.write(f'## {format_jumlah(sub_df['Prevalensi OR (Laki-laki vs Perempuan)'].values[0])}')
