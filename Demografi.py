@@ -44,7 +44,7 @@ st.markdown("""
 tab1, tab2, tab3 = st.tabs([
     "DEMOGRAFI",
     "SEBARAN KASUS",
-    "UKURAN EPIDEMOLOGI"])
+    "UKURAN EPIDEMIOLOGI"])
 
 total_penduduk_laki = sum(data["Jumlah Penduduk Laki Laki"])
 total_penduduk_perempuan = sum(data["Jumlah Penduduk Perempuan"])
